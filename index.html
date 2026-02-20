@@ -196,7 +196,7 @@ let events = load(STORE_EVENTS);
 let registrations = load(STORE_REGS);
 
 // Seed demo events (v2 = 6 events)
-const SEED_VERSION = 'skodax-seed-v2';
+const SEED_VERSION = 'skodax-seed-v3';
 if (!localStorage.getItem(SEED_VERSION)) {
   localStorage.setItem(SEED_VERSION, '1');
   events = []; // Clear old data to reseed
@@ -298,6 +298,39 @@ if (!localStorage.getItem(SEED_VERSION)) {
     },
   ];
   save(STORE_EVENTS, events);
+
+  // Generate demo registrations (~half capacity per event)
+  const firstNames = ['Jan','Petr','Martin','Tomáš','Lukáš','David','Jakub','Vojtěch','Adam','Ondřej','Filip','Marek','Michal','Daniel','Pavel','Anna','Eva','Kateřina','Lucie','Tereza','Petra','Barbora','Monika','Hana','Lenka','Veronika','Zuzana','Klára','Markéta','Simona'];
+  const lastNames = ['Novák','Svoboda','Novotný','Dvořák','Černý','Procházka','Kučera','Veselý','Horák','Němec','Marková','Pokorná','Pospíšilová','Hájková','Králová','Jelínková','Řezníčková','Sedláčková','Urbanová','Malá','Blažek','Fiala','Šťastný','Kolář','Navrátil'];
+  const companies = ['Škoda Auto','T-Mobile CZ','Komerční banka','Alza.cz','Seznam.cz','Avast','Rohlik.cz','CDN77','JetBrains','Red Hat CZ','SAP CZ','Accenture CZ','McKinsey Praha','Deloitte CZ','ČSOB','Česká spořitelna','O2 Czech Republic','Vodafone CZ','Microsoft CZ','Google CZ'];
+  const positions = ['Marketing Manager','Digital Specialist','Brand Manager','CMO','Head of Marketing','Product Manager','Data Analyst','UX Designer','CEO','CTO','Innovation Lead','PR Manager','Content Strategist','Growth Hacker','Business Developer','Project Manager','Team Lead','Senior Developer','AI Specialist','Community Manager'];
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+
+  const demoRegs = [];
+  events.forEach(evt => {
+    const cap = parseInt(evt.capacity) || 40;
+    const count = Math.floor(cap * 0.45) + Math.floor(Math.random() * Math.floor(cap * 0.15));
+    for (let i = 0; i < count; i++) {
+      const fn = pick(firstNames);
+      const ln = pick(lastNames);
+      const email = (fn.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'') + '.' + ln.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'') + '@' + pick(['gmail.com','seznam.cz','firma.cz','outlook.cz','email.cz']));
+      const reg = {
+        id: 'reg-seed-' + evt.id + '-' + i,
+        eventId: evt.id,
+        name: fn + ' ' + ln,
+        email: email,
+        phone: evt.fields?.phone ? ('+420 ' + (600 + Math.floor(Math.random()*400)) + ' ' + String(Math.floor(Math.random()*900)+100) + ' ' + String(Math.floor(Math.random()*900)+100)) : '',
+        company: evt.fields?.company ? pick(companies) : '',
+        position: evt.fields?.position ? pick(positions) : '',
+        programs: (evt.programs || []).filter(() => Math.random() > 0.4).map(p => p.id),
+        dietaryNotes: evt.fields?.dietary ? (Math.random() > 0.85 ? pick(['Vegetarián','Vegan','Bezlepková dieta','Bez laktózy','Alergie na ořechy']) : '') : '',
+        timestamp: new Date(Date.now() - Math.floor(Math.random() * 30*24*60*60*1000)).toISOString(),
+      };
+      demoRegs.push(reg);
+    }
+  });
+  registrations = demoRegs;
+  save(STORE_REGS, registrations);
 }
 
 // State
