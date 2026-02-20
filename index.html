@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ŠKODA X Events – Registrace</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --green: #78FAAE; --green-dark: #3DDC84; --green-deep: #0E4A2E;
+  --black: #0A0A0A; --d1: #111; --d2: #1A1A1A; --d3: #242424; --d4: #2E2E2E;
+  --white: #FFF; --gray: #E5E5E5; --red: #EF5350; --orange: #FFB74D; --blue: #4FC3F7; --purple: #CE93D8;
+  --font: 'DM Sans', sans-serif;
+  /* Dynamic theme – set by JS */
+  --accent: #78FAAE;
+  --bg-gradient: #0d1f15;
+  --text: #FFF;
+  --text-muted: rgba(255,255,255,0.45);
+  --card-bg: #1A1A1A;
+  --input-bg: #242424;
+  --border: rgba(255,255,255,0.06);
+  --accent-glow: rgba(120,250,174,0.15);
+}
+body { font-family: var(--font); background: linear-gradient(170deg, var(--black) 0%, var(--bg-gradient) 50%, var(--black) 100%); color: var(--text); min-height: 100vh; position: relative; }
+body.light { --text: #1a1a1a; --text-muted: rgba(0,0,0,0.5); --card-bg: #ffffff; --input-bg: #f0f0f0; --border: rgba(0,0,0,0.08); }
+input, textarea, button { font-family: var(--font); }
+input::placeholder, textarea::placeholder { color: rgba(255,255,255,0.25); }
+body.light input::placeholder, body.light textarea::placeholder { color: rgba(0,0,0,0.3); }
+
+a { color: var(--accent); text-decoration: none; }
+
+/* Ambient glow */
+.glow { position: fixed; top: -200px; right: -200px; width: 600px; height: 600px; border-radius: 50%; background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%); pointer-events: none; z-index: 0; }
+
+/* Header */
+.header { padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: relative; z-index: 10; }
+.logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); }
+.logo-circle { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--accent); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--accent); }
+.logo-text { font-size: 16px; font-weight: 800; }
+.logo-text span { color: var(--accent); }
+.logo-sub { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.15em; }
+
+/* Container */
+.container { max-width: 700px; margin: 0 auto; padding: 36px 20px 80px; position: relative; z-index: 1; }
+
+/* Buttons */
+.btn { padding: 13px 24px; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s; border: none; display: inline-flex; align-items: center; gap: 8px; }
+.btn-sm { padding: 8px 16px; font-size: 13px; border-radius: 8px; }
+.btn-primary { background: linear-gradient(135deg, var(--accent), var(--green-dark)); color: var(--black); box-shadow: 0 6px 24px var(--accent-glow); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+.btn-secondary { background: var(--d3); color: var(--white); border: 1px solid rgba(255,255,255,0.08); }
+.btn-block { width: 100%; justify-content: center; }
+
+/* Event listing cards */
+.event-listing { display: flex; flex-direction: column; gap: 18px; }
+.evt-card { background: var(--card-bg); border-radius: 20px; overflow: hidden; cursor: pointer; border: 1px solid var(--border); transition: all 0.3s; }
+.evt-card:hover { transform: translateY(-2px); box-shadow: 0 12px 40px var(--accent-glow); }
+.evt-card-photo { width: 100%; height: 200px; object-fit: cover; display: block; position: relative; }
+.evt-card-photo-overlay { position: absolute; inset: 0; background: linear-gradient(transparent 40%, rgba(0,0,0,0.75)); }
+.evt-card-body { padding: 22px 24px; }
+.evt-card-tags { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.tag { font-size: 11px; padding: 4px 10px; border-radius: 6px; font-weight: 700; }
+.evt-card h3 { font-size: 22px; font-weight: 800; margin-bottom: 10px; color: var(--text); }
+.evt-card-meta { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 14px; }
+.evt-card-desc { font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 18px; }
+.evt-card-cta { display: inline-flex; align-items: center; gap: 6px; padding: 10px 22px; border-radius: 10px; background: linear-gradient(135deg, var(--accent), var(--green-dark)); color: var(--black); font-size: 14px; font-weight: 700; }
+
+/* Registration form */
+.form-card { background: var(--card-bg); border-radius: 18px; padding: 28px 24px; border: 1px solid var(--border); margin-bottom: 24px; }
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 5px; letter-spacing: 0.08em; text-transform: uppercase; }
+.form-label .req { color: var(--accent); }
+.form-input { width: 100%; padding: 13px 15px; background: var(--input-bg); border: 1px solid rgba(120,250,174,0.12); border-radius: 10px; color: var(--text); font-size: 14px; outline: none; transition: border-color 0.2s; }
+body.light .form-input { border-color: rgba(0,0,0,0.12); }
+.form-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+.form-input.error { border-color: var(--red); }
+.form-error { color: var(--red); font-size: 11px; margin-top: 3px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+.form-full { grid-column: 1 / -1; }
+.form-actions { display: flex; gap: 12px; margin-top: 24px; }
+.form-actions .btn { flex: 1; justify-content: center; }
+.form-actions .btn-secondary { flex: 0 0 auto; }
+
+/* Event mini header */
+.evt-mini { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; padding: 16px 20px; background: var(--card-bg); border-radius: 14px; border: 1px solid var(--border); }
+.evt-mini-icon { font-size: 28px; }
+.evt-mini h4 { font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 2px; }
+.evt-mini p { font-size: 12px; color: var(--text-muted); }
+
+/* Progress steps */
+.progress { display: flex; align-items: center; justify-content: center; margin-bottom: 34px; }
+.progress-step { display: flex; flex-direction: column; align-items: center; }
+.progress-dot { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; transition: all 0.3s; }
+.progress-dot.done { background: var(--accent); color: var(--black); border: 2px solid var(--accent); }
+.progress-dot.current { background: var(--d3); color: var(--accent); border: 2px solid var(--accent); }
+.progress-dot.upcoming { background: transparent; color: rgba(255,255,255,0.3); border: 2px solid rgba(255,255,255,0.15); }
+.progress-label { font-size: 10px; margin-top: 5px; font-weight: 600; color: var(--accent); }
+.progress-line { width: 50px; height: 2px; margin: 0 10px; margin-bottom: 20px; border-radius: 2px; transition: background 0.3s; }
+
+/* Program checkboxes */
+.prog-check { display: flex; align-items: center; gap: 14px; padding: 14px 16px; margin-bottom: 6px; border-radius: 12px; cursor: pointer; border: 1px solid var(--border); transition: all 0.2s; }
+.prog-check.checked { background: rgba(120,250,174,0.05); border-color: rgba(120,250,174,0.3); }
+body.light .prog-check.checked { background: rgba(120,250,174,0.08); }
+.prog-checkbox { width: 22px; height: 22px; border-radius: 6px; border: 2px solid rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; font-size: 12px; font-weight: 700; }
+body.light .prog-checkbox { border-color: rgba(0,0,0,0.15); }
+.prog-check.checked .prog-checkbox { border-color: var(--accent); background: var(--accent); color: var(--black); }
+.prog-name { font-size: 14px; font-weight: 700; color: var(--text); }
+.prog-details { display: flex; gap: 12px; margin-top: 3px; flex-wrap: wrap; }
+.prog-detail { font-size: 12px; color: var(--text-muted); }
+
+/* Section titles */
+.section-title { font-size: 28px; font-weight: 900; margin-bottom: 8px; letter-spacing: -0.03em; color: var(--text); }
+.section-title .accent { background: linear-gradient(90deg, var(--accent), var(--green-dark)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.section-subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 28px; }
+
+/* Success */
+.success { text-align: center; padding: 50px 0; animation: fadeInUp 0.6s ease-out; }
+.success-icon { width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 24px; background: linear-gradient(135deg, var(--accent), var(--green-dark)); display: flex; align-items: center; justify-content: center; font-size: 36px; box-shadow: 0 12px 40px var(--accent-glow); }
+.success h2 { font-size: 28px; font-weight: 900; margin-bottom: 10px; color: var(--text); }
+.success p { color: var(--text-muted); font-size: 15px; line-height: 1.6; margin-bottom: 28px; }
+.success strong { color: var(--accent); }
+.summary-box { background: var(--card-bg); border-radius: 16px; padding: 22px; max-width: 420px; margin: 0 auto 28px; text-align: left; border: 1px solid var(--border); }
+.summary-label { color: var(--accent); font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; margin-bottom: 12px; }
+.summary-row { font-size: 13px; color: var(--text-muted); line-height: 2.2; }
+.summary-row strong { color: var(--text); }
+
+/* Empty */
+.empty { text-align: center; padding: 80px 20px; color: var(--text-muted); }
+.empty-icon { font-size: 48px; margin-bottom: 16px; }
+
+/* Footer */
+.footer { text-align: center; padding: 20px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-muted); position: relative; z-index: 1; }
+.admin-hint { position: fixed; bottom: 14px; right: 16px; font-size: 10px; color: rgba(255,255,255,0.1); z-index: 5; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (max-width: 600px) {
+  .form-row { grid-template-columns: 1fr; }
+  .evt-card-photo { height: 160px; }
+  .section-title { font-size: 24px; }
+}
+</style>
+</head>
+<body>
+
+<div class="glow"></div>
+
+<!-- Header -->
+<header class="header">
+  <a href="index.html" class="logo">
+    <div class="logo-circle">ŠX</div>
+    <div>
+      <div class="logo-text">ŠKODA <span>X</span></div>
+      <div class="logo-sub">Events</div>
+    </div>
+  </a>
+  <div id="headerRight"></div>
+</header>
+
+<!-- Main -->
+<div class="container" id="app"></div>
+
+<!-- Footer -->
+<footer class="footer">© 2026 ŠKODA X · Innovation Division of Škoda Auto</footer>
+<div class="admin-hint"><a href="admin.html" style="color:inherit;">Admin →</a></div>
+
+<script>
+// ═══════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════
+
+const STORE_EVENTS = 'skodax-events';
+const STORE_REGS = 'skodax-registrations';
+
+const EVENT_TYPES = {
+  conference: { icon: '🎤', label: 'Konference', color: '#78FAAE' },
+  workshop:   { icon: '🛠️', label: 'Workshop / Školení', color: '#4FC3F7' },
+  meetup:     { icon: '🤝', label: 'Networking / Meetup', color: '#FFB74D' },
+};
+
+const THEMES = [
+  { id: 'green',  primary: '#78FAAE', bg: '#0d1f15', light: false },
+  { id: 'blue',   primary: '#4FC3F7', bg: '#0d1520', light: false },
+  { id: 'orange', primary: '#FFB74D', bg: '#1f150d', light: false },
+  { id: 'purple', primary: '#CE93D8', bg: '#1a0d20', light: false },
+  { id: 'white',  primary: '#78FAAE', bg: '#f5f5f5', light: true },
+];
+
+function load(key) { try { return JSON.parse(localStorage.getItem(key)) || []; } catch { return []; } }
+function save(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
+function esc(str) { const d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML; }
+
+let events = load(STORE_EVENTS);
+let registrations = load(STORE_REGS);
+
+// Seed demo events (v2 = 6 events)
+const SEED_VERSION = 'skodax-seed-v2';
+if (!localStorage.getItem(SEED_VERSION)) {
+  localStorage.setItem(SEED_VERSION, '1');
+  events = []; // Clear old data to reseed
+  events = [
+    {
+      id: 'evt-demo-1', type: 'conference', name: 'ŠKODA X Innovation Day 2026',
+      date: '2026-04-15', dateEnd: '', time: '09:00', timeEnd: '18:00',
+      location: 'Forum Karlín, Praha',
+      description: 'Celodenní konference o inovacích v mobilitě, AI a digitální transformaci. Přijďte se inspirovat přednáškami expertů a networkovat s kolegy z branže.',
+      photoUrl: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80',
+      theme: 'green', capacity: 200, published: true,
+      programs: [
+        { id: 'p1', name: 'Keynote: Budoucnost mobility', time: '09:00', timeEnd: '10:30', speaker: 'CEO ŠKODA X', capacity: '' },
+        { id: 'p2', name: 'Panel: AI v automotive', time: '11:00', timeEnd: '12:00', speaker: '', capacity: '' },
+        { id: 'p3', name: 'Workshop: GEO strategie', time: '13:30', timeEnd: '15:00', speaker: '', capacity: '30' },
+      ],
+      fields: { phone: true, company: true, position: true, dietary: true },
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: 'evt-demo-2', type: 'workshop', name: 'AI pro marketing – Hands-on školení',
+      date: '2026-05-08', dateEnd: '', time: '09:00', timeEnd: '16:00',
+      location: 'ŠKODA X Hub, Mladá Boleslav',
+      description: 'Celodenní praktický workshop zaměřený na využití AI nástrojů v marketingu. Naučíte se pracovat s generativní AI pro tvorbu obsahu, analýzu dat a automatizaci kampaní.',
+      photoUrl: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&q=80',
+      theme: 'blue', capacity: 25, published: true,
+      programs: [
+        { id: 'p4', name: 'AI copywriting – od briefu po finální text', time: '09:00', timeEnd: '10:30', speaker: 'David Mareš', capacity: '25' },
+        { id: 'p5', name: 'Prompt engineering pro marketéry', time: '11:00', timeEnd: '12:30', speaker: 'David Mareš', capacity: '25' },
+        { id: 'p6', name: 'AI vizuály a video – praktická dílna', time: '13:30', timeEnd: '15:00', speaker: 'Tomáš Hrubý', capacity: '25' },
+        { id: 'p7', name: 'Automatizace reportingu s AI', time: '15:15', timeEnd: '16:00', speaker: 'Petra Kovářová', capacity: '25' },
+      ],
+      fields: { phone: true, company: true, position: true, dietary: true },
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: 'evt-demo-3', type: 'meetup', name: 'EV Community Meetup Praha',
+      date: '2026-05-22', dateEnd: '', time: '17:30', timeEnd: '21:00',
+      location: 'Manifesto Market Florenc, Praha',
+      description: 'Neformální setkání komunity elektromobilistů a nadšenců do e-mobility. Sdílejte zkušenosti, prohlédněte si nejnovější modely a poznejte nové lidi ze scény.',
+      photoUrl: 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&q=80',
+      theme: 'orange', capacity: 80, published: true,
+      programs: [
+        { id: 'p8', name: 'Speed networking', time: '17:30', timeEnd: '18:15', speaker: '', capacity: '' },
+        { id: 'p9', name: 'Lightning talks – zkušenosti s EV', time: '18:30', timeEnd: '19:30', speaker: 'Community speakers', capacity: '' },
+        { id: 'p10', name: 'Fireside chat: Budoucnost nabíjení v ČR', time: '19:30', timeEnd: '20:15', speaker: 'Jan Šváb, ČEZ', capacity: '' },
+        { id: 'p11', name: 'Drinks & networking', time: '20:15', timeEnd: '21:00', speaker: '', capacity: '' },
+      ],
+      fields: { phone: false, company: false, position: false, dietary: false },
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: 'evt-demo-4', type: 'conference', name: 'Digital Transformation Summit 2026',
+      date: '2026-06-12', dateEnd: '2026-06-13', time: '08:30', timeEnd: '17:00',
+      location: 'O2 Universum, Praha',
+      description: 'Dvoudenní summit o digitální transformaci v automobilovém průmyslu. Keynote přednášky od lídrů z VW Group, panelové diskuze o datech, AI a zákaznické zkušenosti.',
+      photoUrl: 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=800&q=80',
+      theme: 'purple', capacity: 500, published: true,
+      programs: [
+        { id: 'p12', name: 'Keynote: Digital-first strategie VW Group', time: '09:00', timeEnd: '10:00', speaker: 'CTO Volkswagen AG', capacity: '' },
+        { id: 'p13', name: 'Panel: Data-driven rozhodování', time: '10:30', timeEnd: '11:30', speaker: '', capacity: '' },
+        { id: 'p14', name: 'Workshop: Customer journey mapping', time: '13:00', timeEnd: '14:30', speaker: 'UX tým ŠKODA X', capacity: '40' },
+        { id: 'p15', name: 'Panel: Connected car & OTA updates', time: '15:00', timeEnd: '16:00', speaker: '', capacity: '' },
+        { id: 'p16', name: 'Networking dinner (Den 1)', time: '18:00', timeEnd: '21:00', speaker: '', capacity: '150' },
+        { id: 'p17', name: 'Hackathon: Mobility of Tomorrow (Den 2)', time: '09:00', timeEnd: '16:00', speaker: '', capacity: '60' },
+      ],
+      fields: { phone: true, company: true, position: true, dietary: true },
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: 'evt-demo-5', type: 'workshop', name: 'Brand Visibility v AI systémech',
+      date: '2026-06-26', dateEnd: '', time: '10:00', timeEnd: '14:00',
+      location: 'Impact Hub, Praha',
+      description: 'Jak se vaše značka zobrazuje v ChatGPT, Claude, Perplexity a dalších AI platformách? Workshop zaměřený na Answer Engine Optimization (AEO) a Generative Engine Optimization (GEO).',
+      photoUrl: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&q=80',
+      theme: 'green', capacity: 30, published: true,
+      programs: [
+        { id: 'p18', name: 'Jak AI platformy vybírají značky', time: '10:00', timeEnd: '11:00', speaker: 'David Mareš, ŠKODA X', capacity: '30' },
+        { id: 'p19', name: 'Audit vaší značky v AI – praktické cvičení', time: '11:15', timeEnd: '12:15', speaker: 'David Mareš, ŠKODA X', capacity: '30' },
+        { id: 'p20', name: 'AEO & GEO strategie – akční plán', time: '12:45', timeEnd: '14:00', speaker: 'David Mareš, ŠKODA X', capacity: '30' },
+      ],
+      fields: { phone: true, company: true, position: true, dietary: false },
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: 'evt-demo-6', type: 'meetup', name: 'ŠKODA X After Work – Letní edice',
+      date: '2026-07-10', dateEnd: '', time: '16:00', timeEnd: '20:00',
+      location: 'Střecha Lucerny, Praha',
+      description: 'Letní neformální setkání týmu ŠKODA X a partnerů. Grilování na střeše, demo ukázky nových projektů a příjemná atmosféra s výhledem na Prahu.',
+      photoUrl: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=800&q=80',
+      theme: 'orange', capacity: 60, published: true,
+      programs: [
+        { id: 'p21', name: 'Welcome drink & grill', time: '16:00', timeEnd: '17:00', speaker: '', capacity: '' },
+        { id: 'p22', name: 'Demo corner – nové projekty ŠKODA X', time: '17:00', timeEnd: '18:30', speaker: 'Tým ŠKODA X', capacity: '' },
+        { id: 'p23', name: 'Sunset talks & networking', time: '18:30', timeEnd: '20:00', speaker: '', capacity: '' },
+      ],
+      fields: { phone: false, company: true, position: false, dietary: true },
+      createdAt: new Date().toISOString(),
+    },
+  ];
+  save(STORE_EVENTS, events);
+}
+
+// State
+let currentView = 'list'; // list | form | program | success
+let selectedEventId = null;
+let formData = { name: '', email: '', phone: '', company: '', position: '', programs: [], dietaryNotes: '' };
+let formErrors = {};
+let submittedReg = null;
+
+// ═══════════════════════════════════════
+// THEME
+// ═══════════════════════════════════════
+
+function applyTheme(themeId) {
+  const theme = THEMES.find(t => t.id === themeId) || THEMES[0];
+  document.documentElement.style.setProperty('--accent', theme.primary);
+  document.documentElement.style.setProperty('--bg-gradient', theme.bg);
+  document.documentElement.style.setProperty('--accent-glow', theme.primary + '18');
+  document.body.classList.toggle('light', theme.light);
+}
+
+// ═══════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════
+
+function render() {
+  events = load(STORE_EVENTS); // Refresh from storage (in case admin changed things)
+
+  const app = document.getElementById('app');
+  const headerRight = document.getElementById('headerRight');
+
+  if (currentView === 'list') {
+    applyTheme('green'); // Default theme for listing
+    headerRight.innerHTML = '';
+    renderEventList(app);
+  } else if (currentView === 'form') {
+    const evt = events.find(e => e.id === selectedEventId);
+    if (!evt) { currentView = 'list'; render(); return; }
+    applyTheme(evt.theme || 'green');
+    headerRight.innerHTML = `<button class="btn btn-sm btn-secondary" onclick="goToList()">← Všechny eventy</button>`;
+    renderForm(app, evt);
+  } else if (currentView === 'program') {
+    const evt = events.find(e => e.id === selectedEventId);
+    if (!evt) { currentView = 'list'; render(); return; }
+    applyTheme(evt.theme || 'green');
+    headerRight.innerHTML = `<button class="btn btn-sm btn-secondary" onclick="goToList()">← Všechny eventy</button>`;
+    renderProgramStep(app, evt);
+  } else if (currentView === 'success') {
+    const evt = events.find(e => e.id === selectedEventId);
+    if (evt) applyTheme(evt.theme || 'green');
+    headerRight.innerHTML = '';
+    renderSuccess(app);
+  }
+}
+
+// ─── Event Listing ───
+
+function renderEventList(el) {
+  const published = events.filter(e => e.published);
+
+  let html = `
+    <div style="animation:fadeInUp 0.5s ease-out;">
+      <h1 class="section-title">Nadcházející <span class="accent">eventy</span></h1>
+      <p class="section-subtitle">Vyberte event, na který se chcete registrovat</p>
+  `;
+
+  if (published.length === 0) {
+    html += '<div class="empty"><div class="empty-icon">📅</div><p>Momentálně nejsou k dispozici žádné eventy</p></div>';
+  } else {
+    html += '<div class="event-listing">';
+    published.forEach(evt => {
+      const meta = EVENT_TYPES[evt.type] || EVENT_TYPES.conference;
+      const dateStr = evt.date ? new Date(evt.date + 'T00:00').toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '–';
+
+      html += `
+      <div class="evt-card" onclick="goToForm('${evt.id}')">
+        ${evt.photoUrl ? `
+          <div style="position:relative;">
+            <img class="evt-card-photo" src="${esc(evt.photoUrl)}" alt="" onerror="this.parentElement.style.display='none'">
+            <div class="evt-card-photo-overlay"></div>
+          </div>
+        ` : ''}
+        <div class="evt-card-body">
+          <div class="evt-card-tags">
+            <span class="tag" style="background:${meta.color}15;color:${meta.color}">${meta.icon} ${meta.label}</span>
+            ${evt.capacity ? `<span class="tag" style="background:var(--d3);color:var(--text-muted)">👥 Kapacita ${evt.capacity}</span>` : ''}
+          </div>
+          <h3>${esc(evt.name)}</h3>
+          <div class="evt-card-meta">
+            📅 ${dateStr}${evt.time ? ` · 🕐 ${evt.time}–${evt.timeEnd || ''}` : ''}<br>
+            📍 ${esc(evt.location)}
+          </div>
+          ${evt.description ? `<div class="evt-card-desc">${esc(evt.description)}</div>` : ''}
+          <div class="evt-card-cta">Registrovat se →</div>
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+// ─── Registration Form ───
+
+function renderForm(el, evt) {
+  const meta = EVENT_TYPES[evt.type] || EVENT_TYPES.conference;
+  const hasProgram = evt.programs?.length > 0;
+  const steps = hasProgram ? ['Vaše údaje', 'Program'] : ['Vaše údaje'];
+
+  let progressHtml = '';
+  if (steps.length > 1) {
+    progressHtml = '<div class="progress">';
+    steps.forEach((lbl, i) => {
+      progressHtml += `
+        <div class="progress-step">
+          <div class="progress-dot current">${i + 1}</div>
+          <div class="progress-label">${lbl}</div>
+        </div>`;
+      if (i < steps.length - 1) progressHtml += `<div class="progress-line" style="background:rgba(120,250,174,0.2);"></div>`;
+    });
+    progressHtml += '</div>';
+  }
+
+  const f = evt.fields || {};
+
+  el.innerHTML = `
+  <div style="animation:fadeInUp 0.4s ease-out;">
+    <div class="evt-mini">
+      <div class="evt-mini-icon">${meta.icon}</div>
+      <div>
+        <h4>${esc(evt.name)}</h4>
+        <p>📅 ${evt.date ? new Date(evt.date + 'T00:00').toLocaleDateString('cs-CZ', { day: 'numeric', month: 'long' }) : '–'} · 📍 ${esc(evt.location)}</p>
+      </div>
+    </div>
+
+    ${progressHtml}
+
+    <h2 class="section-title">Vaše <span class="accent">údaje</span></h2>
+    <p class="section-subtitle">Vyplňte prosím registrační formulář</p>
+
+    <div class="form-card">
+      <div class="form-row">
+        <div class="form-group form-full">
+          <label class="form-label">Jméno a příjmení <span class="req">*</span></label>
+          <input class="form-input ${formErrors.name ? 'error' : ''}" id="fName" value="${esc(formData.name)}" placeholder="Jan Novák">
+          ${formErrors.name ? `<div class="form-error">${formErrors.name}</div>` : ''}
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email <span class="req">*</span></label>
+          <input class="form-input ${formErrors.email ? 'error' : ''}" id="fEmail" type="email" value="${esc(formData.email)}" placeholder="jan@firma.cz">
+          ${formErrors.email ? `<div class="form-error">${formErrors.email}</div>` : ''}
+        </div>
+        ${f.phone ? `
+        <div class="form-group">
+          <label class="form-label">Telefon</label>
+          <input class="form-input" id="fPhone" type="tel" value="${esc(formData.phone)}" placeholder="+420 xxx xxx xxx">
+        </div>` : ''}
+        ${f.company ? `
+        <div class="form-group">
+          <label class="form-label">Firma / Organizace</label>
+          <input class="form-input" id="fCompany" value="${esc(formData.company)}" placeholder="Název firmy">
+        </div>` : ''}
+        ${f.position ? `
+        <div class="form-group">
+          <label class="form-label">Pozice</label>
+          <input class="form-input" id="fPosition" value="${esc(formData.position)}" placeholder="Marketing Manager">
+        </div>` : ''}
+      </div>
+      ${f.dietary ? `
+      <div class="form-group">
+        <label class="form-label">Poznámka (strava, alergie, speciální požadavky)</label>
+        <textarea class="form-input" id="fDietary" rows="2" placeholder="Vegetariánské jídlo, bez lepku...">${esc(formData.dietaryNotes)}</textarea>
+      </div>` : ''}
+    </div>
+
+    <div class="form-actions">
+      <button class="btn btn-secondary" onclick="goToList()">← Zpět</button>
+      <button class="btn btn-primary" onclick="submitForm()">${hasProgram ? 'Pokračovat →' : '✓ Dokončit registraci'}</button>
+    </div>
+  </div>`;
+}
+
+// ─── Program Selection ───
+
+function renderProgramStep(el, evt) {
+  const meta = EVENT_TYPES[evt.type] || EVENT_TYPES.conference;
+  const steps = ['Vaše údaje', 'Program'];
+
+  let progressHtml = '<div class="progress">';
+  steps.forEach((lbl, i) => {
+    const cls = i === 0 ? 'done' : 'current';
+    progressHtml += `
+      <div class="progress-step">
+        <div class="progress-dot ${cls}">${i === 0 ? '✓' : i + 1}</div>
+        <div class="progress-label">${lbl}</div>
+      </div>`;
+    if (i < steps.length - 1) progressHtml += `<div class="progress-line" style="background:var(--accent);"></div>`;
+  });
+  progressHtml += '</div>';
+
+  let progsHtml = '';
+  evt.programs.forEach(prog => {
+    const checked = formData.programs.includes(prog.id);
+    progsHtml += `
+    <div class="prog-check ${checked ? 'checked' : ''}" onclick="toggleProgram('${prog.id}')">
+      <div class="prog-checkbox">${checked ? '✓' : ''}</div>
+      <div style="flex:1;">
+        <div class="prog-name">${esc(prog.name)}</div>
+        <div class="prog-details">
+          <span class="prog-detail">🕐 ${prog.time || '?'}–${prog.timeEnd || '?'}</span>
+          ${prog.speaker ? `<span class="prog-detail">🎤 ${esc(prog.speaker)}</span>` : ''}
+          ${prog.capacity ? `<span class="prog-detail">👥 max ${prog.capacity}</span>` : ''}
+        </div>
+      </div>
+    </div>`;
+  });
+
+  el.innerHTML = `
+  <div style="animation:fadeInUp 0.4s ease-out;">
+    ${progressHtml}
+
+    <h2 class="section-title">Vyberte <span class="accent">program</span></h2>
+    <p class="section-subtitle">Vybráno: ${formData.programs.length} z ${evt.programs.length}</p>
+
+    <div class="form-card" style="padding:20px 18px;">
+      ${progsHtml}
+    </div>
+
+    <div class="form-actions">
+      <button class="btn btn-secondary" onclick="goBackToForm()">← Zpět</button>
+      <button class="btn btn-primary" onclick="finishRegistration()">✓ Dokončit registraci</button>
+    </div>
+  </div>`;
+}
+
+// ─── Success ───
+
+function renderSuccess(el) {
+  const reg = submittedReg;
+  const evt = events.find(e => e.id === reg?.eventId);
+  if (!reg || !evt) { goToList(); return; }
+
+  const dateStr = evt.date ? new Date(evt.date + 'T00:00').toLocaleDateString('cs-CZ', { day: 'numeric', month: 'long', year: 'numeric' }) : '–';
+
+  let progNames = '';
+  if (reg.programs?.length > 0 && evt.programs) {
+    progNames = reg.programs.map(pId => evt.programs.find(p => p.id === pId)?.name).filter(Boolean).join(', ');
+  }
+
+  el.innerHTML = `
+  <div class="success">
+    <div class="success-icon">✓</div>
+    <h2>Registrace dokončena!</h2>
+    <p>Děkujeme, <strong>${esc(reg.name)}</strong>.<br>Potvrzení jsme odeslali na <strong>${esc(reg.email)}</strong>.</p>
+
+    <div class="summary-box">
+      <div class="summary-label">Shrnutí</div>
+      <div class="summary-row">
+        <div><strong>Event:</strong> ${esc(evt.name)}</div>
+        <div><strong>Datum:</strong> ${dateStr}</div>
+        <div><strong>Místo:</strong> ${esc(evt.location)}</div>
+        ${reg.company ? `<div><strong>Firma:</strong> ${esc(reg.company)}</div>` : ''}
+        ${progNames ? `<div><strong>Program:</strong> ${esc(progNames)}</div>` : ''}
+      </div>
+    </div>
+
+    <button class="btn btn-secondary" onclick="goToList()">← Zpět na eventy</button>
+  </div>`;
+}
+
+// ═══════════════════════════════════════
+// NAVIGATION & ACTIONS
+// ═══════════════════════════════════════
+
+function goToList() {
+  currentView = 'list';
+  selectedEventId = null;
+  formData = { name: '', email: '', phone: '', company: '', position: '', programs: [], dietaryNotes: '' };
+  formErrors = {};
+  submittedReg = null;
+  render();
+  window.scrollTo(0, 0);
+}
+
+function goToForm(evtId) {
+  selectedEventId = evtId;
+  currentView = 'form';
+  render();
+  window.scrollTo(0, 0);
+}
+
+function goBackToForm() {
+  currentView = 'form';
+  render();
+  window.scrollTo(0, 0);
+}
+
+function readFormFields() {
+  const el = (id) => document.getElementById(id);
+  formData.name = el('fName')?.value || formData.name;
+  formData.email = el('fEmail')?.value || formData.email;
+  formData.phone = el('fPhone')?.value || formData.phone;
+  formData.company = el('fCompany')?.value || formData.company;
+  formData.position = el('fPosition')?.value || formData.position;
+  formData.dietaryNotes = el('fDietary')?.value || formData.dietaryNotes;
+}
+
+function submitForm() {
+  readFormFields();
+
+  // Validate
+  formErrors = {};
+  if (!formData.name.trim()) formErrors.name = 'Jméno je povinné';
+  if (!formData.email.trim()) formErrors.email = 'Email je povinný';
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) formErrors.email = 'Neplatný formát emailu';
+
+  if (Object.keys(formErrors).length > 0) {
+    render();
+    return;
+  }
+
+  const evt = events.find(e => e.id === selectedEventId);
+  if (evt?.programs?.length > 0) {
+    currentView = 'program';
+  } else {
+    finishRegistration();
+    return;
+  }
+  render();
+  window.scrollTo(0, 0);
+}
+
+function toggleProgram(progId) {
+  if (formData.programs.includes(progId)) {
+    formData.programs = formData.programs.filter(id => id !== progId);
+  } else {
+    formData.programs.push(progId);
+  }
+  render();
+}
+
+function finishRegistration() {
+  readFormFields();
+
+  const reg = {
+    ...formData,
+    eventId: selectedEventId,
+    timestamp: new Date().toISOString(),
+    id: 'reg-' + Date.now(),
+  };
+
+  registrations.push(reg);
+  save(STORE_REGS, registrations);
+
+  submittedReg = reg;
+  currentView = 'success';
+  render();
+  window.scrollTo(0, 0);
+}
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+
+render();
+</script>
+</body>
+</html>
