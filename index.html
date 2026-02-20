@@ -416,7 +416,6 @@ function renderEventList(el) {
         <div class="evt-card-body">
           <div class="evt-card-tags">
             <span class="tag" style="background:${meta.color}15;color:${meta.color}">${meta.icon} ${meta.label}</span>
-            ${evt.capacity ? `<span class="tag" style="background:var(--d3);color:var(--text-muted)">👥 Kapacita ${evt.capacity}</span>` : ''}
           </div>
           <h3>${esc(evt.name)}</h3>
           <div class="evt-card-meta">
@@ -424,6 +423,21 @@ function renderEventList(el) {
             📍 ${esc(evt.location)}
           </div>
           ${evt.description ? `<div class="evt-card-desc">${esc(evt.description)}</div>` : ''}
+          ${evt.capacity ? (() => {
+              const regCount = registrations.filter(r => r.eventId === evt.id).length;
+              const remaining = Math.max(0, evt.capacity - regCount);
+              const pct = Math.min(100, Math.round(regCount / evt.capacity * 100));
+              const barColor = pct > 85 ? '#EF5350' : pct > 60 ? '#FFB74D' : meta.color;
+              return '<div style="margin-bottom:18px;">' +
+                '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">' +
+                  '<span style="color:var(--text-muted)">👥 Registrováno <strong style="color:var(--text)">' + regCount + '</strong> / ' + evt.capacity + '</span>' +
+                  '<span style="color:' + barColor + ';font-weight:700;">' + (remaining > 0 ? 'Zbývá ' + remaining + ' míst' : '❌ Kapacita naplněna') + '</span>' +
+                '</div>' +
+                '<div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden;">' +
+                  '<div style="height:100%;width:' + pct + '%;background:' + barColor + ';border-radius:3px;transition:width 0.3s;"></div>' +
+                '</div>' +
+              '</div>';
+            })() : ''}
           <div class="evt-card-cta">Registrovat se →</div>
         </div>
       </div>`;
